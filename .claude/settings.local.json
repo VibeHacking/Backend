@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(tasklist)",
+      "Bash(dir)",
+      "Bash(dir:*)",
+      "Bash(curl:*)",
+      "Bash(uvicorn:*)",
+      "Bash(pip install:*)",
+      "Bash(python -m pip:*)",
+      "Bash(python:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:lemonade-server.ai)",
+      "WebFetch(domain:ryzenai.docs.amd.com)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
