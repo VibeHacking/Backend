@@ -11,11 +11,20 @@ import json
 from dotenv import load_dotenv
 from openai import OpenAI
 
+# Add user site-packages to path for PaddleOCR
+import site
+sys.path.append(site.getusersitepackages())
+
+from paddleocr import PaddleOCR
+from PIL import Image
+import numpy as np
+import io
+
 load_dotenv()
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(sys.stdout),
@@ -52,6 +61,12 @@ app.add_middleware(
 class AnalyzeResponse(BaseModel):
     image_content: str
     suggestion: str
+    context: Dict[str, Any]
+
+
+class AnalyzeOCRResponse(BaseModel):
+    extracted_text: str
+    analysis: str
     context: Dict[str, Any]
 
 
