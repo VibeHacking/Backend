@@ -1,24 +1,19 @@
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import Any, Dict
 import base64
-import os
-import logging
-import sys
-import requests
 import json
-from dotenv import load_dotenv
-from openai import OpenAI
-
-# Add user site-packages to path for PaddleOCR
+import logging
+import os
 import site
-sys.path.append(site.getusersitepackages())
+import sys
+from typing import Any
 
-from paddleocr import PaddleOCR
-from PIL import Image
-import numpy as np
-import io
+import requests
+from dotenv import load_dotenv
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from openai import OpenAI
+from pydantic import BaseModel
+
+sys.path.append(site.getusersitepackages())
 
 load_dotenv()
 
@@ -61,13 +56,13 @@ app.add_middleware(
 class AnalyzeResponse(BaseModel):
     image_content: str
     suggestion: str
-    context: Dict[str, Any]
+    context: dict[str, Any]
 
 
 class AnalyzeOCRResponse(BaseModel):
     extracted_text: str
     analysis: str
-    context: Dict[str, Any]
+    context: dict[str, Any]
 
 
 @app.post("/analyze", response_model=AnalyzeResponse)
@@ -86,7 +81,6 @@ async def analyze(
 
         mime = image.content_type or "image/jpeg"
         b64 = base64.b64encode(content).decode("utf-8")
-        data_url = f"data:{mime};base64,{b64}"
         logger.info(f"Image encoded to base64 - mime: {mime}, base64 length: {len(b64)}")
 
         # First, use OCR server to extract text from the image
