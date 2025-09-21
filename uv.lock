@@ -889,6 +889,7 @@ dependencies = [
     { name = "pytesseract" },
     { name = "python-dotenv" },
     { name = "python-multipart" },
+    { name = "requests" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -904,6 +905,7 @@ requires-dist = [
     { name = "pytesseract", specifier = "==0.3.10" },
     { name = "python-dotenv", specifier = "==1.0.1" },
     { name = "python-multipart", specifier = "==0.0.9" },
+    { name = "requests", specifier = ">=2.32.5" },
     { name = "uvicorn", extras = ["standard"], specifier = "==0.30.6" },
 ]
 
