@@ -1,190 +1,170 @@
-## AI Reply Suggestion API
+# AI Reply Suggestion API
 
-FastAPI server that accepts an image and an instruction, calls OpenAI (vision + text), and returns a suggested reply along with the full context used.
+一個智慧回覆建議系統，使用 **PaddleOCR** 進行圖片文字擷取，並透過 **lemonade-server** 的 **gpt-oss-20b-GGUF** 模型生成高 EQ 的回覆建議。
 
-### Requirements
+## 🚀 系統架構
 
-- Python 3.10+
-- OpenAI API key
+### 核心技術
+- **OCR 引擎**: PaddleOCR - 高精度的多語言文字識別系統
+- **AI 模型**: lemonade-server 的 gpt-oss-20b-GGUF - 20B 參數的開源大語言模型
+- **API 框架**: FastAPI - 現代化、高效能的 Python Web 框架
 
-### Setup
+### 處理流程
+1. 接收圖片上傳（支援 jpeg/png/webp 等格式）
+2. 透過 PaddleOCR 伺服器擷取圖片中的文字內容
+3. 將擷取的文字傳送給 gpt-oss-20b-GGUF 模型進行分析
+4. 根據不同情境生成最適合的回覆建議
 
-1. Create and activate a virtual environment (recommended).
-2. Install dependencies:
+## 📋 系統需求
 
+- Python 3.13+
+- lemonade-server (運行在 localhost:8060)
+- OCR 伺服器 (運行在 localhost:4004)
+
+## 🛠️ 安裝步驟
+
+### 1. 複製專案
+```bash
+git clone <repository-url>
+cd Test_backend_server
+```
+
+### 2. 建立虛擬環境（建議）
+```bash
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# Linux/Mac
+source .venv/bin/activate
+```
+
+### 3. 安裝依賴套件
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Configure environment variables:
-   - Create `.env` and set `OPENAI_API_KEY`.
-   - Optionally set `OPENAI_MODEL` (default: `gpt-4o-mini`).
-
-### Run
-
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+### 4. 環境設定
+建立 `.env` 檔案並設定以下參數：
+```env
+OPENAI_API_KEY=not-needed  # lemonade-server 不需要真實的 API key
+USE_LEMONADE=true
+OCR_SERVER_URL=http://localhost:4004  # OCR 伺服器位址
 ```
+
+## 🔧 啟動服務
+
+### 1. 確保相關服務正在運行
+- lemonade-server (port 8060)
+- OCR 伺服器 (port 4004)
+
+### 2. 啟動 API 伺服器
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+```
+
+服務將在 `http://localhost:8080` 運行
+
+## 📡 API 使用說明
 
 ### Endpoint
+- **POST** `/analyze`
+- **Content-Type**: `multipart/form-data`
 
-- POST `/analyze`
-- Content-Type: `multipart/form-data`
-- Fields:
-  - `instruction` (string): Instruction for generating the reply.
-  - `image` (file): Image file (jpeg/png/webp/etc.).
+### 請求參數
+| 參數 | 類型 | 說明 |
+|-----|------|------|
+| `instruction` | string | 情境描述（如：romantic、professional、casual 等） |
+| `image` | file | 圖片檔案（支援 jpeg/png/webp 等格式） |
 
-### Example curl
-
-```bash
-curl -X POST \
-  -F "instruction=Summarize the situation and suggest a concise reply." \
-  -F "image=@/path/to/image.jpg" \
-  http://localhost:8000/analyze | jq
-```
-
-### Response shape
-
+### 回應格式
 ```json
 {
-  "suggestion": "Proposed concise reply based on the image and instruction.",
+  "image_content": "從圖片中擷取並分析的內容",
+  "suggestion": "根據情境優化後的回覆建議",
   "context": {
-    "model": "gpt-4o-mini",
-    "messages": [
-      { "role": "system", "content": "..." },
-      {
-        "role": "user",
-        "content": [
-          { "type": "text", "text": "<instruction>" },
-          {
-            "type": "image_url",
-            "image_url": { "url": "data:image/jpeg;base64,..." }
-          }
-        ]
-      }
-    ],
-    "openai_raw": { "id": "...", "created": 0, "model": "..." }
+    "model": "gpt-oss-20b-GGUF",
+    "ocr_data": { ... },
+    "pipeline": "OCR -> gpt-oss-20b-GGUF (text-only)",
+    "openai_raw": { ... }
   }
 }
-
 ```
 
-curl -X POST -F "instruction=Summarize the situation and
-   suggest a concise reply." -F
-  "image=@C:\Users\VibeHackingUser\Documents\glass\screens
-  hots\screenshot_1758196665910.png"
-  http://localhost:8000/analyze
+## 💡 使用範例
 
-   基本 curl 請求
-
-  curl -X POST \
-    -F "instruction=Summarize the situation and suggest a 
-  concise reply." \
-    -F "image=@/path/to/your/image.jpg" \
-    http://localhost:8001/analyze
-
-  實際使用範例（你剛才的請求）
-
-  curl -X POST \
-    -F "instruction=Summarize the situation and suggest a     
-  concise reply." \
-    -F "image=@C:\Users\VibeHackingUser\Documents\glass\sc    
-  reenshots\screenshot_1758196665910.png" \
-    http://localhost:8001/analyze
-
-  範例回覆
-
-  剛才實際調用的完整 JSON 回覆：
-
-  {
-    "image_content": "The image shows a coding
-  environment, likely Visual Studio Code, where a
-  JavaScript file is being edited. The code includes a        
-  style definition for a component called `StView`, using     
-  CSS for layout. There are also messages in a terminal       
-  window indicating that files are being updated and
-  changes are being committed to a repository.
-  \n\nAdditionally, there's an interface that appears to      
-  show an AI suggestion or comment related to the
-  code.\n\n### Summary of the Situation:\nThe user is
-  working on a JavaScript project within Visual Studio        
-  Code, making changes to component styles and pushing        
-  updates to a version control system. They are also
-  utilizing some sort of AI functionality for code
-  assistance.\n\n### Suggested Reply:\n\"Looks like you're    
-   making good progress on the project! If you have any       
-  questions or need help with the AI suggestions, feel        
-  free to ask!\"",
-    "suggestion": "\"Great to see you updating your
-  project! If you need any assistance with the code or AI     
-  suggestions, just let me know!\"",
-    "context": {
-      "model": "gpt-4o-mini",
-      "messages": [
-        {
-          "role": "system",
-          "content": "You are an assistant that analyzes a    
-   user's chat context from an image (e.g., screenshot)       
-  and extract the content of the image.Record every
-  message in the image."
-        },
-        {
-          "role": "user",
-          "content": [
-            {
-              "type": "text",
-              "text": "Please analyze the image and
-  extract the content of the image. Summarize the
-  situation and suggest a concise reply."
-            },
-            {
-              "type": "image_url",
-              "image_url": {
-                "url": "data:image/png;base64,..."
-              }
-            }
-          ]
-        }
-      ],
-      "openai_raw": {
-        "id": "chatcmpl-...",
-        "created": 1726743292,
-        "model": "gpt-4o-mini-2024-07-18"
-      }
-    }
-  }
-
-  其他指令範例
-
-# 分析商務對話
+### 基本請求
+```bash
 curl -X POST \
-    -F "instruction=This is a business conversation.
-  Suggest a professional reply." \
-    -F "image=@business_chat.png" \
-    http://localhost:8001/analyze
+  -F "instruction=這是一個朋友間的對話，請提供友善的回覆" \
+  -F "image=@chat_screenshot.png" \
+  http://localhost:8080/analyze
+```
 
-# 分析社交對話
-  curl -X POST \
-    -F "instruction=This is a casual friend chat. Suggest     
-  a friendly response." \
-    -F "image=@friend_chat.png" \
-    http://localhost:8001/analyze
+### 不同情境範例
 
-  # 分析技術討論
-  curl -X POST \
-    -F "instruction=This is a technical discussion.
-  Provide a helpful technical response." \
-    -F "image=@tech_discussion.png" \
-    http://localhost:8001/analyze
+#### 浪漫/社交情境
+```bash
+curl -X POST \
+  -F "instruction=romantic_social - 需要高 EQ 的回覆" \
+  -F "image=@romantic_chat.png" \
+  http://localhost:8080/analyze
+```
 
-  API 正在 http://localhost:8001 運行，可以接收任何圖片格     
-  式（jpeg/png/webp等）並根據你的指令提供相應的回覆建議。     
+#### 專業/學術情境
+```bash
+curl -X POST \
+  -F "instruction=academic_professional - 需要正式且專業的回覆" \
+  -F "image=@business_email.png" \
+  http://localhost:8080/analyze
+```
 
-──────────────────────────────────────────────────────────────
->  
-──────────────────────────────────────────────────────────────
-  1 background task ·↓ to view                             ◯  
+#### 輕鬆/幽默情境
+```bash
+curl -X POST \
+  -F "instruction=casual_humor - 加入適當的幽默感" \
+  -F "image=@casual_chat.png" \
+  http://localhost:8080/analyze
+```
 
+## 🎯 系統特色
 
+### 智慧情境識別
+- 自動識別對話的潛在意圖和情感需求
+- 根據不同情境調整回覆風格和語氣
+- 避免低 EQ 的回覆（如"多喝熱水"等）
 
+### 多語言支援
+- 支援繁體中文和英文回覆
+- 自動根據原始內容選擇適當的語言
 
+### 高 EQ 回覆模式
+- **情感驗證優先**：先理解和認同對方的感受
+- **避免說教**：不提供不必要的建議或解決方案
+- **讀懂潛台詞**：理解"我沒事"背後的真實情感
+- **適當的關心**：提供實際的幫助而非空泛的安慰
+
+## 📁 專案結構
+```
+Test_backend_server/
+├── app/
+│   └── main.py          # 主要 API 程式碼
+├── .env                 # 環境變數設定
+├── pyproject.toml       # 專案設定檔
+├── README.md           # 本文件
+└── uv.lock            # 依賴鎖定檔
+```
+
+## 🔍 日誌記錄
+系統會自動記錄運行日誌到：
+- 控制台輸出（即時顯示）
+- `app.log` 檔案（持久儲存）
+
+## 📝 授權
+[請加入適當的授權資訊]
+
+## 🤝 貢獻
+歡迎提交 Issue 和 Pull Request！
+
+---
+
+*Powered by lemonade-server's gpt-oss-20b-GGUF & PaddleOCR*
