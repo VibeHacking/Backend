@@ -1,21 +1,19 @@
 import base64
 import json
 import logging
-import os
 import site
 import sys
 from typing import Any
 
 import requests
-from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
 from pydantic import BaseModel
 
-sys.path.append(site.getusersitepackages())
+from config import settings
 
-load_dotenv()
+sys.path.append(site.getusersitepackages())
 
 # Configure logging
 logging.basicConfig(
@@ -34,7 +32,7 @@ OCR_SERVER_URL = "OCR_SERVER_URL", "http://localhost:4004"
 
 # API key not required for local servers
 
-logger.info(f"Initializing OpenAI client with model: {OPENAI_MODEL}")
+logger.info(f"Initializing OpenAI client with model: {settings.openai_model}")
 logger.info("Configuring client for Lemonade server at localhost:8060")
 client = OpenAI(
     base_url="http://localhost:8060/api/v1",
@@ -90,7 +88,7 @@ async def analyze(
         try:
             # OCR server expects 'file' parameter, not 'image'
             ocr_response = requests.post(
-                f"{OCR_SERVER_URL}/ocr",
+                f"{settings.ocr_server_url}/ocr",
                 files={"file": (image.filename, content, mime)},
                 timeout=30
             )
