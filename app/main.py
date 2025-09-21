@@ -33,9 +33,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "not-needed")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-oss-20b-GGUF")
-OCR_SERVER_URL = os.getenv("OCR_SERVER_URL", "http://localhost:4004")
+OPENAI_API_KEY = "not-needed"
+OPENAI_MODEL = "OPENAI_MODEL", "gpt-oss-20b-GGUF"
+OCR_SERVER_URL = "OCR_SERVER_URL", "http://localhost:4004"
 
 # API key not required for local servers
 
