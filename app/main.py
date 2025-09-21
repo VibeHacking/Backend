@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
 from pydantic import BaseModel
 
-from config import settings
+from app.config import settings
 
 sys.path.append(site.getusersitepackages())
 
@@ -26,9 +26,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-OPENAI_API_KEY = "not-needed"
-OPENAI_MODEL = "OPENAI_MODEL", "gpt-oss-20b-GGUF"
-OCR_SERVER_URL = "OCR_SERVER_URL", "http://localhost:4004"
+OPENAI_API_KEY = settings.openai_api_key
+OPENAI_MODEL = settings.openai_model
+OCR_SERVER_URL = settings.ocr_server_url
 
 # API key not required for local servers
 
